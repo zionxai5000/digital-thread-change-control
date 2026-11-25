@@ -44,7 +44,7 @@ def _hatch(rev: str, status: str) -> DesignRevision:
             Operation(60, "Final inspection and package"),
         ],
         characteristics={
-            "GROOVE_DEPTH": Characteristic("GROOVE_DEPTH", depth, depth - 0.05, depth + 0.05, "mm"),
+            "GROOVE_DEPTH": Characteristic("GROOVE_DEPTH", depth, round(depth - 0.05, 2), round(depth + 0.05, 2), "mm"),
             "HINGE_TORQUE": Characteristic("HINGE_TORQUE", 85.0, 80.0, 90.0, "N*m"),
             "SEAL_HOLD": Characteristic("SEAL_HOLD", 3.3, 3.0, 3.6, "bar"),
         },
