@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Digital Thread Control</title>
+<style>
+:root{--bg:#0b0f14;--panel:#121821;--panel2:#18202b;--line:#243041;--text:#e6edf3;--mut:#8b9bb0;--dim:#5d6b7e;
+--ok:#3fb950;--warn:#d29922;--bad:#f85149;--info:#58a6ff;--acc:#7ee0c3;--font:ui-sans-serif,-apple-system,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 var(--font)}
+a{color:var(--info)}
+header{display:flex;align-items:center;gap:16px;padding:18px 28px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#0f151d,#0b0f14)}
+.logo{width:34px;height:34px;border-radius:8px;background:conic-gradient(from 200deg,#7ee0c3,#58a6ff,#7ee0c3);display:grid;place-items:center;color:#0b0f14;font-weight:800}
+h1{font-size:18px;margin:0;letter-spacing:.3px}.sub{color:var(--mut);font-size:12.5px}
+.badge{font:600 10.5px/1 var(--font);letter-spacing:.8px;text-transform:uppercase;padding:6px 9px;border-radius:999px;border:1px solid #3b4a5f;color:#b8c7da;background:#141c26}
+.spacer{flex:1}
+.btn{cursor:pointer;border:1px solid var(--line);background:var(--panel2);color:var(--text);padding:8px 12px;border-radius:8px;font:500 13px var(--font)}
+.btn:hover{border-color:#3d5170}.btn.primary{background:#1f6f5c;border-color:#2b8a73}.btn.primary:hover{background:#25806a}
+.btn:disabled{opacity:.45;cursor:default}
+main{padding:22px 28px 40px;max-width:1500px;margin:0 auto}
+.kpis{display:grid;grid-template-columns:repeat(7,1fr);gap:12px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;position:relative;overflow:hidden;transition:border-color .4s}
+.kpi .l{color:var(--mut);font-size:11.5px;text-transform:uppercase;letter-spacing:.7px}
+.kpi .v{font-size:28px;font-weight:650;margin-top:4px;font-variant-numeric:tabular-nums}
+.kpi .d{font-size:12px;color:var(--dim);height:16px}.kpi .d.up{color:var(--ok)}.kpi .d.dn{color:var(--bad)}.kpi .d.flat{color:var(--dim)}
+.kpi.flash{border-color:var(--acc)}
+.kpi:before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--k,#2b3a4f)}
+.chain{display:grid;grid-template-columns:repeat(6,1fr);gap:0;margin:16px 0 18px}
+.stage{background:var(--panel);border:1px solid var(--line);padding:12px 14px 12px 22px;position:relative;clip-path:polygon(0 0,calc(100% - 14px) 0,100% 50%,calc(100% - 14px) 100%,0 100%,14px 50%)}
+.stage:first-child{clip-path:polygon(0 0,calc(100% - 14px) 0,100% 50%,calc(100% - 14px) 100%,0 100%);border-radius:10px 0 0 10px;padding-left:16px}
+.stage .t{font-weight:650;letter-spacing:.4px;display:flex;align-items:center;gap:8px}
+.stage .c{color:var(--mut);font-size:11.5px;text-transform:uppercase;letter-spacing:.6px}
+.stage .x{color:#b6c3d3;font-size:12.5px;margin-top:4px}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block;background:var(--dim)}.dot.ok{background:var(--ok)}.dot.warn{background:var(--warn)}.dot.bad{background:var(--bad);box-shadow:0 0 8px var(--bad)}
+.grid{display:grid;grid-template-columns:minmax(0,2.1fr) minmax(320px,1fr);gap:16px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.panel h2{font-size:12.5px;margin:0;padding:12px 16px;border-bottom:1px solid var(--line);text-transform:uppercase;letter-spacing:.8px;color:#c3d0de;display:flex;align-items:center;gap:8px}
+.panel h2 .n{color:var(--dim);font-weight:500}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;color:var(--mut);font-weight:500;font-size:11.5px;text-transform:uppercase;letter-spacing:.6px;padding:9px 12px;border-bottom:1px solid var(--line);background:#101620}
+td{padding:9px 12px;border-bottom:1px solid #1c2633;white-space:nowrap}
+tr.row{cursor:pointer}tr.row:hover td{background:#16202c}
+tr.chg td{animation:chg 1.6s ease}
+@keyframes chg{0%{background:#21412f}100%{background:transparent}}
+.mono{font-family:var(--mono);font-size:12.5px}
+.chip{display:inline-block;padding:3px 8px;border-radius:999px;font-size:11.5px;font-weight:600;letter-spacing:.3px;border:1px solid}
+.s-ACTIVE{color:#7cc4ff;border-color:#24496b;background:#10233a}.s-PLANNED{color:#a7b3c2;border-color:#334155;background:#151d28}
+.s-HOLD{color:#ffb4ac;border-color:#6b2a26;background:#2a1414}.s-COMPLETE{color:#e5d38a;border-color:#5e5020;background:#221e0f}
+.s-ACCEPTED{color:#8ee6a0;border-color:#22563a;background:#0f2418}.s-SCRAPPED{color:#999;border-color:#444;background:#1b1b1b}
+.rev{font-family:var(--mono);padding:2px 6px;border-radius:5px;background:#1a2431}.rev.stale{background:#3a1f12;color:#ffb27a;outline:1px solid #7a3d18}
+.gap{color:var(--bad);font-weight:600}.okc{color:var(--ok)}
+.side{display:flex;flex-direction:column;gap:16px}
+.list{max-height:none}
+.item{padding:11px 16px;border-bottom:1px solid #1c2633;display:flex;gap:10px;align-items:flex-start}
+.item:last-child{border-bottom:0}.item.click{cursor:pointer}.item.click:hover{background:#16202c}
+.item .m{flex:1;min-width:0}.item .t1{font-weight:600}.item .t2{color:var(--mut);font-size:12.5px}
+.item .go{color:var(--acc);font-size:12px;white-space:nowrap}
+.lv{width:8px;height:8px;border-radius:50%;margin-top:6px;flex:none}.lv.warn{background:var(--warn)}.lv.bad{background:var(--bad)}.lv.ok{background:var(--ok)}.lv.info{background:var(--info)}
+#runner{display:none;margin:0 0 16px;background:linear-gradient(180deg,#132029,#111821);border:1px solid #2a4a49;border-radius:12px;padding:16px 18px}
+#runner.on{display:block}
+.rh{display:flex;align-items:flex-start;gap:12px}.rh .ttl{font-size:16px;font-weight:650}.rh .intro{color:var(--mut);font-size:13px;max-width:900px}
+.steps{display:flex;gap:6px;margin:14px 0 12px;flex-wrap:wrap}
+.sd{height:6px;flex:1;min-width:24px;border-radius:3px;background:#243041}.sd.done{background:#2b8a73}.sd.blk{background:#a0662a}.sd.cur{outline:2px solid var(--acc)}
+.card{display:grid;grid-template-columns:1fr auto;gap:14px;align-items:start;background:#0f161f;border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.card .who{color:var(--acc);font-size:12px;text-transform:uppercase;letter-spacing:.7px}
+.card .lab{font-size:15px;font-weight:650;margin:2px 0}.card .nar{color:#b8c5d4}
+.res{margin-top:10px;padding:9px 12px;border-radius:8px;font-family:var(--mono);font-size:12.5px;white-space:pre-wrap}
+.res.ok{background:#0f2418;border:1px solid #22563a;color:#a6f0b8}.res.blocked{background:#2a1c0e;border:1px solid #6b4a1d;color:#ffcf8a}
+.ev{margin-top:10px;font-family:var(--mono);font-size:12px;color:var(--mut);max-height:150px;overflow:auto}
+.ev div{padding:2px 0;border-bottom:1px dashed #1d2834}
+.ctl{display:flex;flex-direction:column;gap:8px;min-width:230px}
+#drawer{position:fixed;top:0;right:0;bottom:0;width:min(720px,96vw);background:#0e141c;border-left:1px solid var(--line);transform:translateX(100%);transition:transform .25s ease;z-index:20;overflow:auto;box-shadow:-20px 0 40px #0008}
+#drawer.on{transform:none}
+#scrim{position:fixed;inset:0;background:#0007;display:none;z-index:10}#scrim.on{display:block}
+.dh{padding:18px 22px;border-bottom:1px solid var(--line);display:flex;gap:12px;align-items:center;position:sticky;top:0;background:#0e141c}
+.dh .s{font-size:18px;font-weight:700;font-family:var(--mono)}
+.db{padding:16px 22px}
+.thread{position:relative;margin-left:8px}
+.node{position:relative;padding:0 0 14px 26px;border-left:2px solid #2a3a50}
+.node:last-child{border-left-color:transparent}
+.node:before{content:"";position:absolute;left:-7px;top:2px;width:12px;height:12px;border-radius:50%;background:#0e141c;border:2px solid var(--acc)}
+.node.bad:before{border-color:var(--bad);background:#3a1414}
+.node .nt{font-weight:650;font-size:13px;text-transform:uppercase;letter-spacing:.6px;color:#c9d6e4}
+.node ul{margin:4px 0 0;padding-left:16px;color:#aebbc9;font-size:12.5px}.node li{margin:1px 0}
+.flag{display:flex;gap:10px;padding:8px 12px;border-radius:8px;background:#261316;border:1px solid #5c2329;margin:6px 0;font-size:13px}
+.flag .code{font-family:var(--mono);font-size:11.5px;color:#ff9b93;min-width:210px}
+.flag.nb{background:#141c26;border-color:#2a3a50}.flag.nb .code{color:var(--mut)}
+.sec{margin:18px 0 8px;color:var(--mut);font-size:11.5px;text-transform:uppercase;letter-spacing:.8px}
+details{margin-top:16px}summary{cursor:pointer;color:var(--mut);font-size:12.5px;text-transform:uppercase;letter-spacing:.8px}
+.audit{font-family:var(--mono);font-size:12px;max-height:280px;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-top:8px}
+.audit div{padding:2px 0;color:#9fb0c3}.audit b{color:#d7e3ef;font-weight:600}
+footer{color:var(--dim);font-size:12px;padding:18px 28px;border-top:1px solid var(--line);text-align:center}
+@media (max-width:1100px){.kpis{grid-template-columns:repeat(4,1fr)}.chain{grid-template-columns:repeat(3,1fr)}.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">DT</div>
+  <div><h1>Digital Thread Control</h1><div class="sub">Engineering intent &rarr; physical execution &middot; change control, traceability, human authority</div></div>
+  <div class="spacer"></div>
+  <span class="badge" title="All parts, serials, lots, suppliers and people are invented">Synthetic reference data</span>
+  <button class="btn" id="reset" title="Return to baseline">Reset</button>
+</header>
+<main>
+  <section class="kpis" id="kpis"></section>
+  <section class="chain" id="chain"></section>
+  <section id="runner"></section>
+  <section class="grid">
+    <div class="panel">
+      <h2>Work orders <span class="n" id="won"></span><span class="spacer"></span><span class="n" style="text-transform:none;letter-spacing:0">Click a serial for its full thread</span></h2>
+      <div style="overflow:auto"><table><thead><tr><th>Work order</th><th>Serial</th><th>Item</th><th>Traveler</th><th>Released</th><th>Status</th><th>Next op</th><th>Need</th><th>Thread</th></tr></thead><tbody id="wos"></tbody></table></div>
+    </div>
+    <div class="side">
+      <div class="panel"><h2>Engineering changes</h2><div id="ecos"></div></div>
+      <div class="panel"><h2>Decisions awaiting authority <span class="n" id="dn"></span></h2><div id="decisions"></div></div>
+      <div class="panel"><h2>Alerts</h2><div id="alerts"></div></div>
+    </div>
+  </section>
+  <section class="panel" style="margin-top:16px"><h2>Scenarios</h2><div id="scen" style="display:grid;grid-template-columns:repeat(4,1fr);gap:0"></div></section>
+  <details><summary>Audit log (append-only)</summary><div class="audit" id="audit"></div></details>
+</main>
+<footer>Reference implementation &middot; synthetic data only &middot; every disposition requires a named human authority &middot; Anthony Blow</footer>
+<div id="scrim"></div>
+<aside id="drawer"></aside>
+<script>
+const DATA = /*__DATA__*/null;
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const KPI = [["active_wos","Active work orders","#58a6ff"],["on_hold","On hold","#f85149",1],["open_ecos","Open ECOs","#d29922",1],["open_ncrs","Open NCRs","#f85149",1],["trace_coverage","Trace coverage","#7ee0c3",0,"%"],["fpy","First-pass yield","#3fb950",0,"%"],["accepted","Accepted units","#3fb950"]];
+let state = {snap: DATA.baseline, prev: null, scen: null, step: -1};
+
+function render(){
+  const s = state.snap, p = state.prev;
+  $("#kpis").innerHTML = KPI.map(([k,l,c,inv,u]) => {
+    const v = s.kpis[k], pv = p ? p.kpis[k] : v, d = +(v - pv).toFixed(1);
+    const cls = d === 0 ? "flat" : ((d > 0) !== !!inv ? "up" : "dn");
+    return `<div class="kpi ${d!==0?"flash":""}" style="--k:${c}"><div class="l">${l}</div><div class="v">${v}${u||""}</div><div class="d ${cls}">${d===0?"":(d>0?"▲ +":"▼ ")+d+(u||"")}</div></div>`;
+  }).join("");
+  $("#chain").innerHTML = s.chain.map(c => `<div class="stage"><div class="t"><span class="dot ${c.status}"></span>${c.stage.toUpperCase()}</div><div class="c">${c.cap}</div><div class="x">${esc(c.detail)}</div></div>`).join("");
+  const pw = p ? Object.fromEntries(p.work_orders.map(w => [w.id, JSON.stringify(w)])) : {};
+  $("#won").textContent = s.work_orders.length;
+  $("#wos").innerHTML = s.work_orders.map(w => {
+    const chg = p && pw[w.id] !== JSON.stringify(w);
+    const stale = w.traveler_rev !== w.effective_rev && w.status !== "ACCEPTED";
+    const thread = w.gaps ? `<span class="gap">● ${w.gaps} gap${w.gaps>1?"s":""}</span>` : (w.status==="ACCEPTED" ? `<span class="okc">● accepted</span>` : (w.acceptable ? `<span class="okc">● ready</span>` : `<span class="okc">● intact</span>`));
+    return `<tr class="row ${chg?"chg":""}" data-serial="${w.serial}"><td class="mono">${w.id}</td><td class="mono"><a href="#" onclick="return false">${w.serial}</a></td><td>${esc(w.title)}</td><td><span class="rev ${stale?"stale":""}">${w.traveler_rev}</span></td><td><span class="rev">${w.effective_rev}</span></td><td><span class="chip s-${w.status}">${w.status}</span></td><td>${esc(w.next_op)}</td><td>${w.need}</td><td>${thread}</td></tr>`;
+  }).join("");
+  document.querySelectorAll("tr.row").forEach(r => r.onclick = () => openTrace(r.dataset.serial));
+  $("#ecos").innerHTML = s.ecos.map(e => `<div class="item click" data-sc="eco"><span class="lv ${e.status.endsWith("IMPLEMENTED")?"ok":"warn"}"></span><div class="m"><div class="t1 mono">${e.id} &middot; ${e.part} Rev ${e.from_rev} &rarr; ${e.to_rev}</div><div class="t2">${esc(e.title)}</div><div class="t2">${esc(e.status)} &middot; effectivity from serial ${String(e.effectivity_from).padStart(4,"0")}</div></div><span class="go">${state.scen==="eco"?"running":"Run &rarr;"}</span></div>`).join("");
+  const pend = s.dispositions.filter(d => d.status === "PENDING");
+  $("#dn").textContent = pend.length;
+  $("#decisions").innerHTML = pend.length ? pend.map(d => `<div class="item"><span class="lv warn"></span><div class="m"><div class="t1"><span class="mono">${d.id}</span> &middot; ${esc(d.required_role)}</div><div class="t2">${esc(d.summary)}</div><div class="t2">Options: ${Object.entries(d.options).map(([o,r]) => esc(o.replaceAll("_"," ").toLowerCase()) + " (" + esc(r) + ")").join(" &middot; ")}</div></div></div>`).join("") : `<div class="item"><div class="m t2">No decisions waiting. The engine recommends; it never approves.</div></div>`;
+  $("#alerts").innerHTML = s.alerts.map(a => `<div class="item ${a.scenario?"click":""}" ${a.scenario?`data-sc="${a.scenario}"`:""}><span class="lv ${a.level}"></span><div class="m"><div>${esc(a.text)}</div><div class="t2 mono">${esc(a.ref)} &middot; ${esc(a.at)}</div></div>${a.scenario&&state.scen!==a.scenario?'<span class="go">Run &rarr;</span>':""}</div>`).join("");
+  document.querySelectorAll("[data-sc]").forEach(el => el.onclick = () => startScenario(el.dataset.sc));
+  $("#audit").innerHTML = s.audit.slice().reverse().map(a => `<div>${esc(a.at)} <b>${esc(a.action)}</b> ${esc(a.ref)} &middot; ${esc(a.actor)} (${esc(a.role)}) &middot; ${esc(a.detail)}</div>`).join("");
+  $("#scen").innerHTML = Object.entries(DATA.scenarios).map(([k,v]) => `<div class="item click" data-sc2="${k}" style="border-right:1px solid #1c2633"><span class="lv ${k==="eco"?"warn":k==="ncr"||k==="mismatch"?"bad":"info"}"></span><div class="m"><div class="t1">${esc(v.title)}</div><div class="t2">${v.steps.length} steps</div></div><span class="go">${state.scen===k?"running":"Run &rarr;"}</span></div>`).join("");
+  document.querySelectorAll("[data-sc2]").forEach(el => el.onclick = () => startScenario(el.dataset.sc2));
+  renderRunner();
+}
+
+function actionLabel(st){ return st.action || st.label; }
+function renderRunner(){
+  const r = $("#runner");
+  if (!state.scen){ r.className=""; r.innerHTML=""; return; }
+  const sc = DATA.scenarios[state.scen], i = state.step, cur = sc.steps[i], nxt = sc.steps[i+1];
+  r.className = "on";
+  r.innerHTML = `<div class="rh"><div style="flex:1"><div class="ttl">${esc(sc.title)}</div><div class="intro">${esc(sc.intro)}</div></div><button class="btn" id="exit">Close</button></div>
+  <div class="steps">${sc.steps.map((s,j) => `<div class="sd ${j<=i?(s.outcome==="blocked"?"blk":"done"):""} ${j===i?"cur":""}" title="${esc(s.label)}"></div>`).join("")}</div>
+  <div class="card"><div>${cur ? `<div class="who">Step ${i+1} of ${sc.steps.length} &middot; ${esc(cur.who)}</div><div class="lab">${esc(cur.label)}</div><div class="nar">${esc(cur.narrative)}</div>
+     <div class="res ${cur.outcome}">${cur.outcome==="blocked"?"REFUSED BY DESIGN  ":"OK  "}${esc(cur.message).replaceAll(" | ","\n")}</div>
+     <div class="ev">${cur.events.map(e => `<div>${esc(e.at.slice(11))} ${esc(e.action)} ${esc(e.ref)} &middot; ${esc(e.actor)} &middot; ${esc(e.detail)}</div>`).join("")}</div>`
+   : `<div class="who">Ready</div><div class="lab">Baseline loaded</div><div class="nar">Step through the scenario. KPIs, the build chain, work orders and every serial's thread update after each action.</div>`}</div>
+   <div class="ctl">${nxt ? `<button class="btn primary" id="next">${esc(actionLabel(nxt))} &rarr;</button><div class="t2" style="color:var(--mut);font-size:12px">Next: ${esc(nxt.label)}</div>` : `<button class="btn" id="restart">Replay scenario</button>`}
+   ${i>=0?'<button class="btn" id="back">&larr; Back</button>':""}</div></div>`;
+  $("#exit").onclick = () => { state = {snap: DATA.baseline, prev: null, scen: null, step: -1}; render(); };
+  if ($("#next")) $("#next").onclick = () => go(i+1);
+  if ($("#back")) $("#back").onclick = () => go(i-1);
+  if ($("#restart")) $("#restart").onclick = () => startScenario(state.scen);
+}
+function go(i){
+  const sc = DATA.scenarios[state.scen];
+  state.prev = state.snap;
+  state.step = i;
+  state.snap = i < 0 ? DATA.baseline : sc.steps[i].snapshot;
+  render();
+  if (document.getElementById("drawer").classList.contains("on")) openTrace(currentSerial);
+}
+function startScenario(k){ state = {snap: DATA.baseline, prev: null, scen: k, step: -1}; render(); window.scrollTo({top:0, behavior:"smooth"}); }
+
+let currentSerial = null;
+function openTrace(serial){
+  currentSerial = serial;
+  const t = state.snap.traces[serial];
+  const blocking = t.findings.filter(f => f.blocking && !["NOT_COMPLETE","REQUIREMENT_UNVERIFIED"].includes(f.code));
+  const badStage = {MISSING_CERT:3,UNQUALIFIED_LOT:3,REV_MISMATCH:4,REWORK_PENDING:4,STALE_TRAVELER:2,FAILED_INSPECTION_NO_DISPOSITION:5,NCR_OPEN:5,OPEN_HOLD:4};
+  const bad = new Set(blocking.map(f => badStage[f.code]).filter(x => x!==undefined));
+  const head = t.status==="ACCEPTED" ? `<span class="chip s-ACCEPTED">ACCEPTED</span>` : (t.acceptable ? `<span class="chip s-ACCEPTED">READY FOR ACCEPTANCE</span>` : `<span class="chip s-HOLD">ACCEPTANCE BLOCKED</span>`);
+  $("#drawer").innerHTML = `<div class="dh"><div><div class="s">${t.serial}</div><div class="t2" style="color:var(--mut)">${esc(t.title)} &middot; ${t.part} &middot; ${t.wo}</div></div><div class="spacer"></div>${head}<button class="btn" id="close">Close</button></div>
+  <div class="db">
+   <div class="sec">Findings</div>
+   ${t.findings.length ? t.findings.map(f => `<div class="flag ${["NOT_COMPLETE","REQUIREMENT_UNVERIFIED"].includes(f.code)?"nb":""}"><span class="code">${f.code}</span><span>${esc(f.text)}</span></div>`).join("") : `<div class="flag nb"><span class="code okc">THREAD COMPLETE</span><span>Every requirement verified, every lot certified, as-built matches released configuration.</span></div>`}
+   <div class="sec">Digital thread</div>
+   <div class="thread">${t.chain.map((c,j) => `<div class="node ${bad.has(j)?"bad":""}"><div class="nt">${esc(c.stage)}</div><ul>${c.items.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>`).join("")}</div>
+   <div class="sec">Requirement verification</div>
+   <table><thead><tr><th>Req</th><th>Requirement</th><th>Evidence</th><th></th></tr></thead><tbody>${t.verification.map(v => `<tr><td class="mono">${v.req}</td><td style="white-space:normal">${esc(v.text)}</td><td class="mono">${esc(v.evidence)}</td><td>${v.verified?'<span class="okc">●</span>':'<span class="gap">○</span>'}</td></tr>`).join("")}</tbody></table>
+   ${t.deviations.length?`<div class="sec">Approved deviations</div>${t.deviations.map(d=>`<div class="flag nb"><span>${esc(d)}</span></div>`).join("")}`:""}
+  </div>`;
+  $("#drawer").classList.add("on"); $("#scrim").classList.add("on");
+  $("#close").onclick = closeTrace;
+}
+function closeTrace(){ $("#drawer").classList.remove("on"); $("#scrim").classList.remove("on"); currentSerial = null; }
+$("#scrim").onclick = closeTrace;
+document.addEventListener("keydown", e => { if (e.key==="Escape") closeTrace(); if (state.scen && e.key==="ArrowRight" && $("#next")) $("#next").click(); if (state.scen && e.key==="ArrowLeft" && $("#back")) $("#back").click(); });
+$("#reset").onclick = () => { closeTrace(); state = {snap: DATA.baseline, prev: null, scen: null, step: -1}; render(); };
+const q = new URLSearchParams(location.search);
+render();
+if (q.get("scenario") && DATA.scenarios[q.get("scenario")]) { startScenario(q.get("scenario")); const n = +q.get("step"); if (n>0) go(Math.min(n, DATA.scenarios[state.scen].steps.length)-1); }
+if (q.get("trace")) { $("#drawer").style.transition = "none"; openTrace(q.get("trace")); }
+</script>
+</body>
+</html>

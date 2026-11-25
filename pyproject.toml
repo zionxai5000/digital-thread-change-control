@@ -1,0 +1,20 @@
+[project]
+name = "digital-thread-change-control"
+version = "0.1.0"
+description = "Reference implementation: engineering change control and digital-thread traceability from requirement to acceptance, with human authority on every disposition"
+authors = [{ name = "Anthony Blow" }]
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = []
+
+[project.optional-dependencies]
+test = ["pytest>=7"]
+
+[tool.setuptools]
+packages = ["dthread"]
+
+[tool.setuptools.package-data]
+dthread = ["web/*.html"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
